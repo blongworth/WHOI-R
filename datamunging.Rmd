@@ -1,0 +1,32 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(skimr)
+
+gapminder <- readr::read_csv('https://raw.githubusercontent.com/OHI-Science/data-science-training/master/data/gapminder.csv')
+
+skim(gapminder)
+```
+
+```{r}
+library(data.table)
+gapminder <- fread('https://raw.githubusercontent.com/OHI-Science/data-science-training/master/data/gapminder.csv')
+
+gapminder[lifeExp < 29]
+gapminder[country == "Mexico"]
+gapminder[country %in% c("Egypt", "Vietnam"), pmax(gdpPercap)]
+
+gapminder[, .(year, lifeExp)]
+
+camb <- gapminder[country == "Cambodia", !c("year", "lifeExp")]
+gapminder[country ]
+```
+
