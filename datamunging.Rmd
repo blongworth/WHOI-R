@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(tidyverse)
 library(skimr)
-
+theme_set(theme_bw())
 gapminder <- readr::read_csv('https://raw.githubusercontent.com/OHI-Science/data-science-training/master/data/gapminder.csv')
 
 skim(gapminder)
@@ -27,6 +27,74 @@ gapminder[country %in% c("Egypt", "Vietnam"), pmax(gdpPercap)]
 gapminder[, .(year, lifeExp)]
 
 camb <- gapminder[country == "Cambodia", !c("year", "lifeExp")]
-gapminder[country ]
+
+gapminder %>% 
+  group_by(country) %>%
+  mutate(gdp = pop * gdpPercap) %>%
+  summarize(max_gdp = max(gdp)) %>%
+  ungroup() %>%
+  arrange(desc(max_gdp))
+```
+Joining data
+```{r}
+co2 <- readr::read_csv('https://raw.githubusercontent.com/OHI-Science/data-science-training/master/data/co2.csv')
+
+skim(co2)
+
+gap2007 <- gapminder %>% filter(year == 2007) %>%
+  left_join(co2, by = "country")
+gap2007
+```
+
+# Tidying data
+
+```{r}
+gap_wide <- readr::read_csv('https://raw.githubusercontent.com/OHI-Science/data-science-training/master/data/gapminder_wide.csv')
+
+head(gap_wide)
+
+gap_long <- gap_wide %>%
+  gather(key = obstype_year,
+         value = obs_values,
+         -continent, -country) %>%
+  separate(obstype_year, c("obstype", "year"), sep = "_") %>%
+  mutate(year = as.numeric(year))
+ 
+head(gap_long)
+unique(gap_long$obstype)
+```
+
+```{r}
+gap_long %>% filter(country == "Canada",
+                    obstype == "lifeExp") %>% 
+  ggplot(aes(year, obs_values, color = country)) +
+    geom_point()
+```
+
+```{r}
+sum <- gap_long %>%
+  filter(obstype == "lifeExp",
+         year %in% 1982:2007) %>%
+  group_by(continent, year) %>%
+    summarize(meanLE = mean(obs_values))
+
+ggplot(sum, aes(year, meanLE, color = continent)) +
+  geom_line()
+```
+
+## Spread the long data out a bit
+
+```{r}
+gap <- spread(gap_long, obstype, obs_values )
+
+str(gap)
+```
+
+## Make it really wide again
+
+```{r}
+gap_wide2 <- gap_long %>%
+  unite(var_names, c(obstype, year)) %>%
+  spread(var_names, obs_values)
 ```
 
